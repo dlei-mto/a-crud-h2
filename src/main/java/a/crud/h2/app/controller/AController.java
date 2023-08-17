@@ -1,72 +1,56 @@
 package a.crud.h2.app.controller;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import a.crud.h2.app.exception.ResourceNotFoundException;
 import a.crud.h2.app.model.Employee;
 import a.crud.h2.app.service.AService;
+import a.crud.h2.app.util.ApiPaths;
 import jakarta.validation.Valid;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
+@CrossOrigin
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping(ApiPaths.BASE_PATH)
 public class AController {
 
     @Autowired
     private AService service;
 
-    @GetMapping("/employees")
-    public List<Employee> getAllEmployees() {
+    @GetMapping(ApiPaths.EMPLOYEE_ENDPOINT)
+    public Flux<Employee> getAllEmployees() {
         return service.getAll();
     }
 
-    @GetMapping("/employees/{id}")
-    public ResponseEntity<Employee> getEmployeeById(@PathVariable(value = "id") Long employeeId)
-            throws ResourceNotFoundException {
-        Employee employee = service.getById(employeeId)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee not found for this id :: " + employeeId));
-        return ResponseEntity.ok().body(employee);
+    @GetMapping(ApiPaths.EMPLOYEE_ENDPOINT + "/{id}")
+    public ResponseEntity<Mono<Employee>> getEmployeeById(@PathVariable(value = "id") Long employeeId) {
+        return ResponseEntity.ok().body(service.getById(employeeId));
     }
 
-    @PostMapping("/employees")
-    public Employee createEmployee(@Valid @RequestBody Employee employee) {
+    @PostMapping(ApiPaths.EMPLOYEE_ENDPOINT)
+    @ResponseStatus(HttpStatus.CREATED)
+    public Mono<Employee> createEmployee(@Valid @RequestBody Employee employee) {
         return service.save(employee);
     }
 
-    @PutMapping("/employees/{id}")
-    public ResponseEntity<Employee> updateEmployee(@PathVariable(value = "id") Long employeeId,
-            @Valid @RequestBody Employee employeeDetails) throws ResourceNotFoundException {
-        Employee employee = service.getById(employeeId)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee not found for this id :: " + employeeId));
-
-        employee.setEmailId(employeeDetails.getEmailId());
-        employee.setLastName(employeeDetails.getLastName());
-        employee.setFirstName(employeeDetails.getFirstName());
-        final Employee updatedEmployee = service.save(employee);
-        return ResponseEntity.ok(updatedEmployee);
+    @PutMapping(ApiPaths.EMPLOYEE_ENDPOINT + "/{id}")
+    // @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<Mono<Employee>> updateEmployee(@PathVariable(value = "id") Long employeeId,
+            @Valid @RequestBody Employee employeeDetails) {
+        return ResponseEntity.ok(service.update(employeeId, employeeDetails));
     }
 
-    @DeleteMapping("/employees/{id}")
-    public Map<String, Boolean> deleteEmployee(@PathVariable(value = "id") Long employeeId)
-            throws ResourceNotFoundException {
-        Employee employee = service.getById(employeeId)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee not found for this id :: " + employeeId));
+    @DeleteMapping(ApiPaths.EMPLOYEE_ENDPOINT + "/{id}")
+    // @ResponseStatus(HttpStatus.NO_CONTENT)
+    public Mono<Employee> deleteEmployee(@PathVariable(value = "id") Long employeeId) {
+        return service.delete(employeeId);
+    }
 
-        service.delete(employee);
-        Map<String, Boolean> response = new HashMap<>();
-        response.put("deleted", Boolean.TRUE);
-        return response;
+    @GetMapping(ApiPaths.EMPLOYEE_ENDPOINT + "/lname/{name}")
+    public Flux<Employee> getEmployees(@PathVariable(value = "name") String lastName) {
+        return service.getByLastName(lastName);
     }
 }

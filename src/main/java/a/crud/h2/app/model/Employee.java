@@ -1,30 +1,46 @@
 package a.crud.h2.app.model;
 
-import jakarta.persistence.*; // javax.persistence.* before version 3
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
-@Entity
-@Table(name = "employees")
+import jakarta.validation.constraints.Size;
+
+// @Entity
+@Table(name = Employee.TABLE_NAME) // jakarta.persistence.* won't work
 public class Employee {
-    private long id;
-    private String firstName;
-    private String lastName;
-    private String emailId;
-
-    public Employee() {
-
-    }
+    public static final String TABLE_NAME = "employees";
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    public long getId() {
+    // @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+
+    @Column("first_name") // jakarta.persistence.* won't work
+    @Size(max = 200, message = "max 200")
+    private String firstName;
+
+    @Column("last_name") // jakarta.persistence.* won't work
+    @Size(max = 200, message = "max 200")
+    private String lastName;
+
+    @Column("email_address") // jakarta.persistence.* won't work
+    @Size(max = 200, message = "max 200")
+    private String email;
+
+    public Employee(String firstName, String lastName, String email) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+    }
+
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
-    @Column(name = "first_name", nullable = false)
     public String getFirstName() {
         return firstName;
     }
@@ -33,7 +49,6 @@ public class Employee {
         this.firstName = firstName;
     }
 
-    @Column(name = "last_name", nullable = false)
     public String getLastName() {
         return lastName;
     }
@@ -42,19 +57,17 @@ public class Employee {
         this.lastName = lastName;
     }
 
-    @Column(name = "email_address", nullable = false)
-    public String getEmailId() {
-        return emailId;
+    public String getEmail() {
+        return email;
     }
 
-    public void setEmailId(String emailId) {
-        this.emailId = emailId;
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     @Override
     public String toString() {
-        return "Employee [id=" + id + ", firstName=" + firstName + ", lastName=" + lastName + ", emailId=" + emailId
-                + "]";
+        return "Employee [id=" + id + ", firstName=" + firstName + ", lastName=" + lastName + ", email=" + email + "]";
     }
 
 }
